@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "artifact",
+    "artifact-cli",
+]

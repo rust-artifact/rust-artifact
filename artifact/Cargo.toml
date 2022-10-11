@@ -1,0 +1,18 @@
+[package]
+name = "artifact"
+version = "0.1.0"
+edition = "2021"
+authors = ["Dan Anderson  <me@dananderson.org>"]
+repository = "https://github.com/rust-artifact/rust-artifact"
+keywords = ["bitcoin", "artifact", "crypto", "nft", "rugged"]
+readme = "README.md"
+license = "CC0-1.0"
+
+[dependencies]
+bitflags = "1.0"
+diesel = { version = "2.0.0", features = ["sqlite"] }
+dotenvy = "0.15"
+num-integer = "0.1"
+
+[target.'cfg(windows)'.dependencies]
+libsqlite3-sys = { version = "0.25.0", features = ["bundled"] }
