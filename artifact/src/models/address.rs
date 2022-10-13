@@ -1,4 +1,5 @@
 #[derive(Queryable)]
+#[diesel(primary_key(address))]
 pub struct Address {
     pub address: String,
     pub flags: u32,

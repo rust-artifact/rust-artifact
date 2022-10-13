@@ -1,4 +1,0 @@
-CREATE TABLE tokens (
-  token TEXT PRIMARY KEY NOT NULL,
-  flags UNSIGNED INT4 NOT NULL
-);

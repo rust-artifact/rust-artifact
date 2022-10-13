@@ -1,6 +1,7 @@
 use num_integer::Integer;
 
 #[derive(Queryable)]
+#[diesel(primary_key(token))]
 pub struct Token {
     pub token: String,
     pub flags: u32,

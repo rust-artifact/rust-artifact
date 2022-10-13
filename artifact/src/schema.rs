@@ -8,6 +8,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    balances (address, token) {
+        address -> Text,
+        token -> Text,
+        quantity -> Integer,
+    }
+}
+
+diesel::table! {
     tokens (token) {
         token -> Text,
         flags -> Integer,
@@ -16,5 +24,6 @@ diesel::table! {
 
 diesel::allow_tables_to_appear_in_same_query!(
     addresses,
+    balances,
     tokens,
 );
