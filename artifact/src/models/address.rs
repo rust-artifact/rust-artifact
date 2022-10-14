@@ -17,7 +17,7 @@ pub struct NewAddress<'a> {
 
 bitflags! {
     #[derive(Default)]
-    struct Flags: u32 {
+    struct Flags: i32 {
         const LOCKED = 0b00000001;
         const MEMOFIELD = 0b00000010;
     }
