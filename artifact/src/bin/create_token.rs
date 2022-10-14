@@ -11,6 +11,8 @@ fn main() {
     stdin().read_line(&mut token).unwrap();
     let token = token.trim_end().to_uppercase();
 
-    create_token(connection, &token, &Flags::LOCKED.bits());
+    let flags = Flags::LOCKED | Flags::NAMESPACE;
+
+    create_token(connection, &token, &flags.bits());
     println!("\nSaved token {}", token);
 }
