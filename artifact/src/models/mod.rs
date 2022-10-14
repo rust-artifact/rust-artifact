@@ -1,3 +1,3 @@
-mod address;
-mod balance;
+pub mod address;
+pub mod balance;
 pub mod token;

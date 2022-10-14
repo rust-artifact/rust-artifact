@@ -1,38 +1,59 @@
+use crate::schema::tokens;
 use num_integer::Integer;
+use diesel::prelude::*;
 
 #[derive(Queryable)]
 #[diesel(primary_key(token))]
 pub struct Token {
     pub token: String,
-    pub flags: u32,
+    pub flags: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = tokens)]
+pub struct NewToken<'a> {
+    pub token: &'a str,
+    pub flags: &'a i32,
 }
 
 bitflags! {
     #[derive(Default)]
-    struct Flags: u32 {
+    pub struct Flags: i32 {
         const LOCKED = 0b00000001;
         const NAMESPACE = 0b00000010;
     }
 }
 
-// Valid Vec
-pub static VALID_CHARACTERS: [char; 27] = [
+/// Valid Vec
+pub static VALID_CHARACTERS: [char; 37] = [
     '.', 'A', 'B', 'C', 'D',
     'E', 'F', 'G', 'H', 'I',
     'J', 'K', 'L', 'M', 'N',
     'O', 'P', 'Q', 'R', 'S',
     'T', 'U', 'V', 'W', 'X',
-    'Y', 'Z',
+    'Y', 'Z', '0', '1', '2',
+    '3', '4', '5', '6', '7',
+    '8', '9'
 ];
 
-// Error Enum
+/// Error Enum
 pub enum TokenValidationError {
     InvalidTokenCharacters,
     InvalidTokenLetterCase,
     InvalidTokenLength,
 }
 
-// Generation
+/// Save to DB
+pub fn create_token(conn: &mut SqliteConnection, token: &str, flags: &i32) {
+    let new_token = NewToken { token, flags };
+
+    diesel::insert_into(tokens::table)
+        .values(&new_token)
+        .execute(conn)
+        .expect("Error saving new token");
+}
+
+/// Generation
 pub fn generate_id(token: &str) -> u64 {
     // From Token to ID #
     let mut id: u64 = 0;
@@ -42,21 +63,21 @@ pub fn generate_id(token: &str) -> u64 {
             .position(|&p| p == c)
             .unwrap() as u64;
 
-        id *= 27;
+        id *= 37;
         id += n;
     }
 
     id
 }
 
-// Generation
+/// Generation
 pub fn generate_token(id: u64) -> String {
     // From ID # to Token
     let mut n = id;
     let mut token = vec![];
 
     while n > 0 {
-        let (q, r) = (n).div_rem(&27);
+        let (q, r) = (n).div_rem(&37);
         let c = VALID_CHARACTERS[r as usize];
 
         token.push(c);
@@ -66,14 +87,26 @@ pub fn generate_token(id: u64) -> String {
     token.into_iter().rev().collect()
 }
 
-// Validation
+/// Validation
 pub fn validate_token(token: &str) -> Result<&str, TokenValidationError> {
-    // Length between 1 and 13
-    if token.len() < 1 || token.len() > 13 {
+    // Length between 3 and 12
+    if token.len() < 3 || token.len() > 12 {
+        Err(TokenValidationError::InvalidTokenLength)
+    // Token minimum length 3
+    } else if token.split(".").next().unwrap().len() < 3 {
+        Err(TokenValidationError::InvalidTokenLength)
+    // Subtoken min. length 5
+    } else if token.contains(".") && token.len() < 5 {
         Err(TokenValidationError::InvalidTokenLength)
     // Subtokens one level max
     } else if token.split(".").count() > 2 {
         Err(TokenValidationError::InvalidTokenLength)
+    // First character NOT "."
+    } else if token.chars().next().unwrap() == VALID_CHARACTERS[0] {
+        Err(TokenValidationError::InvalidTokenCharacters)
+    // Final character NOT "."
+    } else if token.chars().last().unwrap() == VALID_CHARACTERS[0] {
+        Err(TokenValidationError::InvalidTokenCharacters)
     // Not BTC or its subtoken
     } else if token == "BTC" || token.len() >= 4 && &token[..4] == "BTC." {
         Err(TokenValidationError::InvalidTokenCharacters)
@@ -81,16 +114,16 @@ pub fn validate_token(token: &str) -> Result<&str, TokenValidationError> {
     } else if token == "ART" || token.len() >= 4 && &token[..4] == "ART." {
         Err(TokenValidationError::InvalidTokenCharacters)
     // All characters UPPERCASE
-    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_uppercase()) {
+    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()) {
         Err(TokenValidationError::InvalidTokenLetterCase)
-    // All characters ASCII ABC
-    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_alphabetic()) {
+    // All characters ALPHA NUM
+    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_alphanumeric()) {
         Err(TokenValidationError::InvalidTokenCharacters)
-    // First character NOT "."
-    } else if token.chars().next().unwrap() == VALID_CHARACTERS[0] {
+    // Non-Subtoken is ASCII ABC
+    } else if !token.split(".").next().unwrap().chars().all(|c| c.is_ascii_alphabetic()) {
         Err(TokenValidationError::InvalidTokenCharacters)
-    // Final character NOT "."
-    } else if token.chars().last().unwrap() == VALID_CHARACTERS[0] {
+    // Subtoken is ALPHA NUMERIC
+    } else if !token.split(".").last().unwrap().chars().all(|c| c.is_ascii_alphanumeric()) {
         Err(TokenValidationError::InvalidTokenCharacters)
     // Valid
     } else {
@@ -129,19 +162,47 @@ mod tests {
     }
 
     #[test]
-    fn validate_token_is_between_1_and_13_chars() {
+    fn validate_token_does_not_start_with_period() {
+        // Case: Starting
+        assert_eq!(validate_token(".ABC").is_ok(), false);
+        // Case: Starting (Subtoken)
+        assert_eq!(validate_token(".ABC.ABC").is_ok(), false);
+    }
+
+    #[test]
+    fn validate_token_does_not_end_with_a_period() {
+        // Case: Ending
+        assert_eq!(validate_token("ABC.").is_ok(), false);
+        // Case: Ending (Subtoken)
+        assert_eq!(validate_token("ABC.ABC.").is_ok(), false);
+    }
+
+    #[test]
+    fn validate_token_is_between_3_and_13_chars() {
         // Case: Empty Name
         assert_eq!(validate_token("").is_ok(), false);
         // Case: 1 Character
-        assert_eq!(validate_token("A").is_ok(), true);
+        assert_eq!(validate_token("A").is_ok(), false);
+        // Case: 3 Characters
+        assert_eq!(validate_token("AAA").is_ok(), true);
+        // Case: 12 Characters
+        assert_eq!(validate_token("ZZZZZZZZZZZZ").is_ok(), true);
         // Case: 13 Characters
-        assert_eq!(validate_token("ZZZZZZZZZZZZZ").is_ok(), true);
+        assert_eq!(validate_token("XXXXXXXXXXXXX").is_ok(), false);
+    }
+
+    #[test]
+    fn validate_subtoken_is_between_5_and_13_chars() {
+        // Case: Empty Name
+        assert_eq!(validate_token("").is_ok(), false);
+        // Case: 1 Character (Subtoken)
+        assert_eq!(validate_token("A.A").is_ok(), false);
+        // Case: 3 Characters (Subtoken)
+        assert_eq!(validate_token("ABC.1").is_ok(), true);
+        // Case: 12 Characters (Subtoken)
+        assert_eq!(validate_token("ZZZZZZZZ.ZZZ").is_ok(), true);
         // Case: 13 Characters (Subtoken)
-        assert_eq!(validate_token("ZZZZZZZZ.ZZZZ").is_ok(), true);
-        // Case: 14 Characters
-        assert_eq!(validate_token("XXXXXXXXXXXXXX").is_ok(), false);
-        // Case: 14 Characters (Subtoken)
-        assert_eq!(validate_token("XXXXXXXXX.XXXX").is_ok(), false);
+        assert_eq!(validate_token("XXXXXXXXX.XXX").is_ok(), false);
     }
 
     #[test]
@@ -153,15 +214,17 @@ mod tests {
         // Case: Uppercase
         assert_eq!(validate_token("UPPERCASE").is_ok(), true);
         // Case: Uppercase (Subtoken)
+        assert_eq!(validate_token("UPPER.case").is_ok(), false);
+        // Case: Uppercase (Subtoken)
         assert_eq!(validate_token("UPPER.CASE").is_ok(), true);
         // Case: Mixed case
         assert_eq!(validate_token("TitleCase").is_ok(), false);
         // Case: Mixed case (Subtoken)
-        assert_eq!(validate_token("Title.Case").is_ok(), false);
+        assert_eq!(validate_token("Title.case").is_ok(), false);
     }
 
     #[test]
-    fn validate_token_is_only_ascii_alphabetic() {
+    fn validate_token_is_only_ascii_alphanumeric() {
         // Case: Alphabetic
         assert_eq!(validate_token("ALPHABETIC").is_ok(), true);
         // Case: Alphabetic (Subtoken)
@@ -177,22 +240,6 @@ mod tests {
         // Case: Mixed
         assert_eq!(validate_token("ABC123").is_ok(), false);
         // Case: Mixed (Subtoken)
-        assert_eq!(validate_token("ABC.123").is_ok(), false);
-    }
-
-    #[test]
-    fn validate_token_does_not_start_with_period() {
-        // Case: Starting
-        assert_eq!(validate_token(".ABC").is_ok(), false);
-        // Case: Starting (Subtoken)
-        assert_eq!(validate_token(".ABC.ABC").is_ok(), false);
-    }
-
-    #[test]
-    fn validate_token_does_not_end_with_a_period() {
-        // Case: Ending
-        assert_eq!(validate_token("ABC.").is_ok(), false);
-        // Case: Ending (Subtoken)
-        assert_eq!(validate_token("ABC.ABC.").is_ok(), false);
+        assert_eq!(validate_token("ABC.123").is_ok(), true);
     }
 }
