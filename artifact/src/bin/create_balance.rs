@@ -6,11 +6,12 @@ fn main() {
     let connection = &mut establish_connection();
 
     let mut address = String::new();
-    let mut token = String::new();
 
     println!("What would you like your address to be?");
     stdin().read_line(&mut address).unwrap();
     let address = address.trim_end();
+
+    let mut token = String::new();
 
     println!("What would you like your token to be?");
     stdin().read_line(&mut token).unwrap();

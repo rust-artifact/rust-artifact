@@ -1,5 +1,4 @@
 use crate::schema::tokens;
-use num_integer::Integer;
 use diesel::prelude::*;
 
 #[derive(Queryable)]
@@ -72,6 +71,8 @@ pub fn generate_id(token: &str) -> u64 {
 
 /// Generation
 pub fn generate_token(id: u64) -> String {
+    use num_integer::Integer;
+
     // From ID # to Token
     let mut n = id;
     let mut token = vec![];
@@ -93,13 +94,13 @@ pub fn validate_token(token: &str) -> Result<&str, TokenValidationError> {
     if token.len() < 3 || token.len() > 12 {
         Err(TokenValidationError::InvalidTokenLength)
     // Token minimum length 3
-    } else if token.split(".").next().unwrap().len() < 3 {
+    } else if token.split('.').next().unwrap().len() < 3 {
         Err(TokenValidationError::InvalidTokenLength)
     // Subtoken min. length 5
-    } else if token.contains(".") && token.len() < 5 {
+    } else if token.contains('.') && token.len() < 5 {
         Err(TokenValidationError::InvalidTokenLength)
     // Subtokens one level max
-    } else if token.split(".").count() > 2 {
+    } else if token.split('.').count() > 2 {
         Err(TokenValidationError::InvalidTokenLength)
     // First character NOT "."
     } else if token.chars().next().unwrap() == VALID_CHARACTERS[0] {
@@ -114,16 +115,16 @@ pub fn validate_token(token: &str) -> Result<&str, TokenValidationError> {
     } else if token == "ART" || token.len() >= 4 && &token[..4] == "ART." {
         Err(TokenValidationError::InvalidTokenCharacters)
     // All characters UPPERCASE
-    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()) {
+    } else if !token.replace('.', "").chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()) {
         Err(TokenValidationError::InvalidTokenLetterCase)
     // All characters ALPHA NUM
-    } else if !token.replace(".", "").chars().all(|c| c.is_ascii_alphanumeric()) {
+    } else if !token.replace('.', "").chars().all(|c| c.is_ascii_alphanumeric()) {
         Err(TokenValidationError::InvalidTokenCharacters)
     // Non-Subtoken is ASCII ABC
-    } else if !token.split(".").next().unwrap().chars().all(|c| c.is_ascii_alphabetic()) {
+    } else if !token.split('.').next().unwrap().chars().all(|c| c.is_ascii_alphabetic()) {
         Err(TokenValidationError::InvalidTokenCharacters)
     // Subtoken is ALPHA NUMERIC
-    } else if !token.split(".").last().unwrap().chars().all(|c| c.is_ascii_alphanumeric()) {
+    } else if !token.split('.').last().unwrap().chars().all(|c| c.is_ascii_alphanumeric()) {
         Err(TokenValidationError::InvalidTokenCharacters)
     // Valid
     } else {

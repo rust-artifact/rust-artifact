@@ -9,5 +9,8 @@ fn main() {
     println!("{}", token::generate_id("999999999999"));
     println!("{}", token::generate_token(1));
     println!("{}", token::generate_token(3481));
+    println!("{}", token::generate_token(32983));
+    println!("{}", token::generate_token(1353560));
     println!("{}", token::generate_token(4754354226440025480));
+    println!("{}", token::generate_token(6582952005840035280));
 }
