@@ -13,6 +13,7 @@ bitflags = "1.0"
 diesel = { version = "2.0.0", features = ["sqlite"] }
 dotenvy = "0.15"
 num-integer = "0.1"
+validator = { version = "0.16", features = ["derive"] }
 
 [target.'cfg(windows)'.dependencies]
 libsqlite3-sys = { version = "0.25.0", features = ["bundled"] }

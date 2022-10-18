@@ -32,3 +32,13 @@ pub fn create_address(conn: &mut SqliteConnection, address: &str, flags: &i32) {
         .execute(conn)
         .expect("Error saving new address");
 }
+
+/// Save to DB
+pub fn update_address(conn: &mut SqliteConnection, _address: &str, _flags: &i32) {
+    use crate::models::address::addresses::dsl::*;
+
+    diesel::update(addresses.find(_address))
+        .set(flags.eq(_flags))
+        .execute(conn)
+        .expect("Error updating address");
+}

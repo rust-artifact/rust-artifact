@@ -27,3 +27,13 @@ pub fn create_balance(conn: &mut SqliteConnection, address: &str, token: &str, q
         .execute(conn)
         .expect("Error saving new balance");
 }
+
+/// Save to DB
+pub fn update_balance(conn: &mut SqliteConnection, _address: &str, _token: &str, _quantity: &i32) {
+    use crate::models::balance::balances::dsl::*;
+
+    diesel::update(balances.find((_address, _token)))
+        .set(quantity.eq(_quantity))
+        .execute(conn)
+        .expect("Error updating balance");
+}

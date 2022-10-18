@@ -11,6 +11,6 @@ fn main() {
     stdin().read_line(&mut address).unwrap();
     let address = address.trim_end();
 
-    create_address(connection, &address, &0);
+    create_address(connection, address, &0);
     println!("\nSaved address {}", address);
 }

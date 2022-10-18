@@ -3,5 +3,5 @@ CREATE TABLE tokens (
   flags UNSIGNED INT4 NOT NULL
 );
 
-INSERT INTO tokens (`token`, `flags`) VALUES ('BTC', 0);
-INSERT INTO tokens (`token`, `flags`) VALUES ('ART', 0);
+INSERT INTO tokens (`token`, `flags`) VALUES ('BTC', 1);
+INSERT INTO tokens (`token`, `flags`) VALUES ('ART', 1);

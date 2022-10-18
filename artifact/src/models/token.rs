@@ -1,10 +1,13 @@
 use crate::schema::tokens;
 use diesel::prelude::*;
+use validator::{Validate, ValidationError};
 
-#[derive(Queryable)]
+#[derive(Queryable, Validate)]
 #[diesel(primary_key(token))]
 pub struct Token {
+    #[validate(custom = "validate_token")]
     pub token: String,
+    #[validate(range(min = 0, max = 3))]
     pub flags: i32,
 }
 
@@ -35,13 +38,6 @@ pub static VALID_CHARACTERS: [char; 37] = [
     '8', '9'
 ];
 
-/// Error Enum
-pub enum TokenValidationError {
-    InvalidTokenCharacters,
-    InvalidTokenLetterCase,
-    InvalidTokenLength,
-}
-
 /// Save to DB
 pub fn create_token(conn: &mut SqliteConnection, token: &str, flags: &i32) {
     let new_token = NewToken { token, flags };
@@ -50,6 +46,16 @@ pub fn create_token(conn: &mut SqliteConnection, token: &str, flags: &i32) {
         .values(&new_token)
         .execute(conn)
         .expect("Error saving new token");
+}
+
+/// Save to DB
+pub fn update_token(conn: &mut SqliteConnection, _token: &str, _flags: &i32) {
+    use crate::models::token::tokens::dsl::*;
+
+    diesel::update(tokens.find(_token))
+        .set(flags.eq(_flags))
+        .execute(conn)
+        .expect("Error updating token");
 }
 
 /// Generation
@@ -89,46 +95,40 @@ pub fn generate_token(id: u64) -> String {
 }
 
 /// Validation
-pub fn validate_token(token: &str) -> Result<&str, TokenValidationError> {
+pub fn validate_token(token: &str) -> Result<(), ValidationError> {
     // Length between 3 and 12
     if token.len() < 3 || token.len() > 12 {
-        Err(TokenValidationError::InvalidTokenLength)
+        Err(ValidationError::new("InvalidTokenLength: Must be between 3 and 12"))
     // Token minimum length 3
     } else if token.split('.').next().unwrap().len() < 3 {
-        Err(TokenValidationError::InvalidTokenLength)
+        Err(ValidationError::new("InvalidTokenLength: Minimum token length is 3"))
     // Subtoken min. length 5
     } else if token.contains('.') && token.len() < 5 {
-        Err(TokenValidationError::InvalidTokenLength)
+        Err(ValidationError::new("InvalidTokenLength: Minimum subtoken length is 5"))
     // Subtokens one level max
     } else if token.split('.').count() > 2 {
-        Err(TokenValidationError::InvalidTokenLength)
+        Err(ValidationError::new("InvalidTokenLength: Maximum subtoken level is 1"))
     // First character NOT "."
     } else if token.chars().next().unwrap() == VALID_CHARACTERS[0] {
-        Err(TokenValidationError::InvalidTokenCharacters)
+        Err(ValidationError::new("InvalidTokenCharacters: First character cannot be '.'"))
     // Final character NOT "."
     } else if token.chars().last().unwrap() == VALID_CHARACTERS[0] {
-        Err(TokenValidationError::InvalidTokenCharacters)
+        Err(ValidationError::new("InvalidTokenCharacters: Last character cannot be '.'"))
     // Not BTC or its subtoken
     } else if token == "BTC" || token.len() >= 4 && &token[..4] == "BTC." {
-        Err(TokenValidationError::InvalidTokenCharacters)
+        Err(ValidationError::new("InvalidTokenCharacters: Cannot issue BTC as a token."))
     // Not ART or its subtoken
     } else if token == "ART" || token.len() >= 4 && &token[..4] == "ART." {
-        Err(TokenValidationError::InvalidTokenCharacters)
+        Err(ValidationError::new("InvalidTokenCharacters: Cannot issue ART as a token."))
     // All characters UPPERCASE
     } else if !token.replace('.', "").chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()) {
-        Err(TokenValidationError::InvalidTokenLetterCase)
+        Err(ValidationError::new("InvalidTokenLetterCase: Must be uppercase characters."))
     // All characters ALPHA NUM
     } else if !token.replace('.', "").chars().all(|c| c.is_ascii_alphanumeric()) {
-        Err(TokenValidationError::InvalidTokenCharacters)
-    // Non-Subtoken is ASCII ABC
-    } else if !token.split('.').next().unwrap().chars().all(|c| c.is_ascii_alphabetic()) {
-        Err(TokenValidationError::InvalidTokenCharacters)
-    // Subtoken is ALPHA NUMERIC
-    } else if !token.split('.').last().unwrap().chars().all(|c| c.is_ascii_alphanumeric()) {
-        Err(TokenValidationError::InvalidTokenCharacters)
+        Err(ValidationError::new("InvalidTokenCharacters: Must be ascii alphanumeric."))
     // Valid
     } else {
-        Ok(token)
+        Ok(())
     }
 }
 
@@ -235,11 +235,11 @@ mod tests {
         // Case: Japanese (Subtoken)
         assert_eq!(validate_token("あ.あ").is_ok(), false);
         // Case: Numeric
-        assert_eq!(validate_token("123456").is_ok(), false);
+        assert_eq!(validate_token("123456").is_ok(), true);
         // Case: Numeric (Subtoken)
-        assert_eq!(validate_token("123.456").is_ok(), false);
+        assert_eq!(validate_token("123.456").is_ok(), true);
         // Case: Mixed
-        assert_eq!(validate_token("ABC123").is_ok(), false);
+        assert_eq!(validate_token("ABC123").is_ok(), true);
         // Case: Mixed (Subtoken)
         assert_eq!(validate_token("ABC.123").is_ok(), true);
     }
