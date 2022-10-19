@@ -3,4 +3,5 @@
 members = [
     "artifact",
     "artifact-cli",
+    "artifact-tui",
 ]
