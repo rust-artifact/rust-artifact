@@ -1,13 +1,13 @@
-use std::{io, thread, time::Duration};
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders},
-    Terminal
-};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use std::{io, thread, time::Duration};
+use tui::{
+    backend::CrosstermBackend,
+    widgets::{Block, Borders},
+    Terminal,
 };
 
 fn main() -> Result<(), io::Error> {
@@ -20,9 +20,7 @@ fn main() -> Result<(), io::Error> {
 
     terminal.draw(|f| {
         let size = f.size();
-        let block = Block::default()
-            .title("Artifact")
-            .borders(Borders::ALL);
+        let block = Block::default().title("Artifact").borders(Borders::ALL);
         f.render_widget(block, size);
     })?;
 

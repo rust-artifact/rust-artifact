@@ -1,6 +1,6 @@
-use diesel::prelude::*;
 use crate::schema::balances;
-use validator::{Validate};
+use diesel::prelude::*;
+use validator::Validate;
 
 #[derive(Queryable, Validate)]
 #[diesel(belongs_to(Address, foreign_key = address))]
@@ -22,7 +22,11 @@ pub struct NewBalance<'a> {
 
 /// Save to DB
 pub fn create_balance(conn: &mut SqliteConnection, address: &str, token: &str, quantity: &i32) {
-    let new_balance = NewBalance { address, token, quantity };
+    let new_balance = NewBalance {
+        address,
+        token,
+        quantity,
+    };
 
     diesel::insert_into(balances::table)
         .values(&new_balance)

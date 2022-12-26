@@ -1,6 +1,6 @@
-use artifact::*;
 use artifact::models::address::*;
-use std::io::{stdin};
+use artifact::*;
+use std::io::stdin;
 
 fn main() {
     let connection = &mut establish_connection();

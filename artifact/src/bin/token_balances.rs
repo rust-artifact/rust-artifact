@@ -1,8 +1,8 @@
-use artifact::*;
-use std::io::{stdin};
-use diesel::prelude::*;
 use artifact::models::balance::*;
 use artifact::schema::balances::dsl::*;
+use artifact::*;
+use diesel::prelude::*;
+use std::io::stdin;
 
 fn main() {
     let connection = &mut establish_connection();

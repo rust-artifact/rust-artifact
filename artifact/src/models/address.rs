@@ -1,6 +1,6 @@
-use diesel::prelude::*;
 use crate::schema::addresses;
-use validator::{Validate};
+use diesel::prelude::*;
+use validator::Validate;
 
 #[derive(Queryable, Validate)]
 #[diesel(primary_key(address))]
