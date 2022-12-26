@@ -17,12 +17,6 @@ fn main() {
     stdin().read_line(&mut token).unwrap();
     let token = token.trim_end().to_uppercase();
 
-    let mut quantity = String::new();
-
-    println!("What quantity would you like to set?");
-    stdin().read_line(&mut quantity).unwrap();
-    let quantity: i32 = quantity.trim_end().parse().unwrap();
-
-    update_balance(connection, address, &token, &quantity);
+    update_balance(connection, address, &token);
     println!("\nSaved balance {}", address);
 }

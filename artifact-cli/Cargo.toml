@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Dan Anderson  <me@dananderson.org>"]
 repository = "https://github.com/rust-artifact/rust-artifact"
-keywords = ["bitcoin", "artifact", "crypto", "nft", "rugged"]
+keywords = ["bitcoin", "artifact", "crypto", "nft", "assets"]
 readme = "README.md"
 license = "CC0-1.0"
 
