@@ -7,10 +7,10 @@ fn main() {
     println!("{}", token::generate_id("ZZZZ"));
     println!("{}", token::generate_id("ZZZZZZZZZZZZ"));
     println!("{}", token::generate_id("999999999999"));
-    println!("{}", token::generate_token(1));
-    println!("{}", token::generate_token(3481));
-    println!("{}", token::generate_token(32983));
-    println!("{}", token::generate_token(1353560));
-    println!("{}", token::generate_token(4754354226440025480));
-    println!("{}", token::generate_token(6582952005840035280));
+    println!("{}", token::generate_token(2));
+    println!("{}", token::generate_token(5134));
+    println!("{}", token::generate_token(36269));
+    println!("{}", token::generate_token(1521585));
+    println!("{}", token::generate_token(6615538473766618305));
+    println!("{}", token::generate_token(9065737908494995455));
 }

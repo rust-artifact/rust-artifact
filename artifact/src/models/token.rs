@@ -27,9 +27,9 @@ bitflags! {
 }
 
 /// Valid Vec
-pub static VALID_CHARACTERS: [char; 37] = [
-    '.', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-    'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+pub static VALID_CHARACTERS: [char; 38] = [
+    '.', '-', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
+    'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 ];
 
 /// Save to DB
@@ -61,7 +61,7 @@ pub fn generate_id(token: &str) -> u64 {
     for c in token.chars() {
         let n = VALID_CHARACTERS.iter().position(|&p| p == c).unwrap() as u64;
 
-        id *= 37;
+        id *= 38;
         id += n;
     }
 
@@ -77,7 +77,7 @@ pub fn generate_token(id: u64) -> String {
     let mut token = vec![];
 
     while n > 0 {
-        let (q, r) = (n).div_rem(&37);
+        let (q, r) = (n).div_rem(&38);
         let c = VALID_CHARACTERS[r as usize];
 
         token.push(c);

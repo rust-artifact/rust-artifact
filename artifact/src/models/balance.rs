@@ -33,25 +33,3 @@ pub fn create_balance(conn: &mut SqliteConnection, address: &str, token: &str, q
         .execute(conn)
         .expect("Error saving new balance");
 }
-
-/// Save to DB
-pub fn update_balance(conn: &mut SqliteConnection, address: &str, token: &str) {
-    use crate::schema::credits::dsl::credits;
-    use crate::schema::debits::dsl::debits;
-    use crate::schema::balances::dsl::balances;
-    use diesel::dsl::sum;
-
-    let quantity = credits.select(sum(credits::quantity))
-                .filter(credits::address.eq(address))
-                .filter(credits::token.eq(token))
-                .single_value()
-        - debits.select(sum(debits::quantity))
-                .filter(debits::address.eq(address))
-                .filter(debits::token.eq(token))
-                .single_value();
-
-    diesel::update(balances.find((address, token)))
-        .set(balances::quantity.eq(quantity))
-        .execute(conn)
-        .expect("Error updating balance");
-}
