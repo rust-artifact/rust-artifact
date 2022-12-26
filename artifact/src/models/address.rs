@@ -1,10 +1,12 @@
-use crate::schema::addresses;
 use diesel::prelude::*;
+use crate::schema::addresses;
+use validator::{Validate};
 
-#[derive(Queryable)]
+#[derive(Queryable, Validate)]
 #[diesel(primary_key(address))]
 pub struct Address {
     pub address: String,
+    #[validate(range(min = 0, max = 3))]
     pub flags: i32,
 }
 
@@ -34,11 +36,12 @@ pub fn create_address(conn: &mut SqliteConnection, address: &str, flags: &i32) {
 }
 
 /// Save to DB
-pub fn update_address(conn: &mut SqliteConnection, _address: &str, _flags: &i32) {
-    use crate::models::address::addresses::dsl::*;
+pub fn update_address(conn: &mut SqliteConnection, address: &str, new_flags: &i32) {
+    use crate::models::address::addresses::dsl::addresses;
+    use crate::models::address::addresses::dsl::flags;
 
-    diesel::update(addresses.find(_address))
-        .set(flags.eq(_flags))
+    diesel::update(addresses.find(address))
+        .set(flags.eq(new_flags))
         .execute(conn)
         .expect("Error updating address");
 }

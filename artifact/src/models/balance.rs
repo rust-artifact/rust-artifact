@@ -1,12 +1,14 @@
-use crate::schema::balances;
 use diesel::prelude::*;
+use crate::schema::balances;
+use validator::{Validate};
 
-#[derive(Queryable)]
+#[derive(Queryable, Validate)]
 #[diesel(belongs_to(Address, foreign_key = address))]
 #[diesel(belongs_to(Token, foreign_key = token))]
 pub struct Balance {
     pub address: String,
     pub token: String,
+    #[validate(range(min = 0, max = 10000))]
     pub quantity: i32,
 }
 
@@ -29,11 +31,12 @@ pub fn create_balance(conn: &mut SqliteConnection, address: &str, token: &str, q
 }
 
 /// Save to DB
-pub fn update_balance(conn: &mut SqliteConnection, _address: &str, _token: &str, _quantity: &i32) {
-    use crate::models::balance::balances::dsl::*;
+pub fn update_balance(conn: &mut SqliteConnection, address: &str, token: &str, new_quantity: &i32) {
+    use crate::models::balance::balances::dsl::balances;
+    use crate::models::balance::balances::dsl::quantity;
 
-    diesel::update(balances.find((_address, _token)))
-        .set(quantity.eq(_quantity))
+    diesel::update(balances.find((address, token)))
+        .set(quantity.eq(new_quantity))
         .execute(conn)
         .expect("Error updating balance");
 }

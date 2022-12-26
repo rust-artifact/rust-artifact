@@ -1,4 +1,4 @@
 CREATE TABLE addresses (
   address TEXT PRIMARY KEY NOT NULL,
-  flags UNSIGNED INT4 NOT NULL
+  flags INTEGER NOT NULL DEFAULT 0 CHECK(flags >= 0)
 );

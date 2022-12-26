@@ -1,5 +1,5 @@
-use crate::schema::tokens;
 use diesel::prelude::*;
+use crate::schema::tokens;
 use validator::{Validate, ValidationError};
 
 #[derive(Queryable, Validate)]
@@ -49,11 +49,12 @@ pub fn create_token(conn: &mut SqliteConnection, token: &str, flags: &i32) {
 }
 
 /// Save to DB
-pub fn update_token(conn: &mut SqliteConnection, _token: &str, _flags: &i32) {
-    use crate::models::token::tokens::dsl::*;
+pub fn update_token(conn: &mut SqliteConnection, token: &str, new_flags: &i32) {
+    use crate::models::token::tokens::dsl::tokens;
+    use crate::models::token::tokens::dsl::flags;
 
-    diesel::update(tokens.find(_token))
-        .set(flags.eq(_flags))
+    diesel::update(tokens.find(token))
+        .set(flags.eq(new_flags))
         .execute(conn)
         .expect("Error updating token");
 }
@@ -75,7 +76,7 @@ pub fn generate_id(token: &str) -> u64 {
     id
 }
 
-/// Generation
+/// Translation
 pub fn generate_token(id: u64) -> String {
     use num_integer::Integer;
 
@@ -126,6 +127,9 @@ pub fn validate_token(token: &str) -> Result<(), ValidationError> {
     // All characters ALPHA NUM
     } else if !token.replace('.', "").chars().all(|c| c.is_ascii_alphanumeric()) {
         Err(ValidationError::new("InvalidTokenCharacters: Must be ascii alphanumeric."))
+    // All characters are valid
+    } else if !token.chars().all(|c| VALID_CHARACTERS.contains(&c)) {
+        Err(ValidationError::new("InvalidTokenCharacters: Must only use valid characters."))
     // Valid
     } else {
         Ok(())
