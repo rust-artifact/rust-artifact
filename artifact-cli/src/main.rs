@@ -1,16 +1,10 @@
-use artifact::models::token;
+use artifact::indexer::{Indexer};
 
 fn main() {
-    println!("{}", token::generate_id("A"));
-    println!("{}", token::generate_id("BTC"));
-    println!("{}", token::generate_id("XCP"));
-    println!("{}", token::generate_id("ZZZZ"));
-    println!("{}", token::generate_id("ZZZZZZZZZZZZ"));
-    println!("{}", token::generate_id("999999999999"));
-    println!("{}", token::generate_token(2));
-    println!("{}", token::generate_token(5134));
-    println!("{}", token::generate_token(36269));
-    println!("{}", token::generate_token(1521585));
-    println!("{}", token::generate_token(6615538473766618305));
-    println!("{}", token::generate_token(9065737908494995455));
+    let indexer = Indexer::new().expect("Failed to create Indexer");
+
+    match indexer.log_blocks_and_txids() {
+        Ok(_) => println!("Finished logging blocks and transaction IDs."),
+        Err(e) => eprintln!("Error while logging blocks and transaction IDs: {:?}", e),
+    }
 }

@@ -3,6 +3,8 @@ extern crate bitflags;
 
 pub mod models;
 pub mod schema;
+pub mod options;
+pub mod indexer;
 
 use diesel::prelude::*;
 use dotenvy::dotenv;
